@@ -1,0 +1,24 @@
+{% include 'header.html' %}
+
+<!-- Include menu -->
+
+<ng-include src="'{{ instance }}/static/{{ customization_menu_file }}'">
+</ng-include>
+<div class="container">
+    <div ui-view class="slide"></div>
+</div>
+
+<input type=hidden id=REMOTE_USER value="{{ remote_user }}">
+<input type=hidden id=PASSWORD_RESET value="{{ password_reset }}">
+<input type=hidden id=HSM_READY value="{{ hsm_ready }}">
+<input type=hidden id=CUSTOMIZATION value="{{ customization }}">
+<input type=hidden id="REALMS" value="{{ realms }}">
+<input type=hidden id="LOGO" value="{{ logo }}">
+<input type=hidden id="EXTERNAL_LINKS" value="{{ external_links }}">
+
+<!-- Include baseline -->
+
+<ng-include src="'{{ instance }}/static/{{ customization_baseline_file }}'">
+</ng-include>
+
+{% include 'footer.html' %}
