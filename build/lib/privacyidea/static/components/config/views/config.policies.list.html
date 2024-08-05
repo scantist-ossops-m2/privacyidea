@@ -1,0 +1,61 @@
+<div class="table-responsive">
+    <table class="table table-bordered table-responsive table-striped">
+        <thead>
+        <tr>
+            <th translate>Active</th>
+            <th translate>Policy Name</th>
+            <th translate>Scope</th>
+            <th translate>Action</th>
+            <th translate>Realm</th>
+            <th translate>User</th>
+            <th translate>Resolver</th>
+            <th translate>Client</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="policy in policies">
+            <td>
+                <span ng-show="policy.active"
+                      class="glyphicon glyphicon-ok"
+                      ng-click="disablePolicy(policy.name)">
+                </span>
+                <span ng-hide="policy.active"
+                      class="glyphicon glyphicon-minus"
+                      ng-click="enablePolicy(policy.name)">
+                </span>
+            </td>
+            <td>
+                <a ui-sref="config.policies.details({policyname: policy.name})">
+                    {{ policy.name }}</a>
+            </td>
+            <td>
+                {{ policy.scope }}
+            </td>
+            <td>
+                {{ policy.action | json }}
+            </td>
+            <td>
+                {{ policy.realm | json }}
+            </td>
+            <td>
+                {{ policy.user | json }}
+            </td>
+            <td>
+                {{ policy.resolver | json }}
+            </td>
+            <td>
+                {{ policy.client | json }}
+            </td>
+            <td>
+                <button class="btn btn-danger"
+                        ng-show="checkRight('policydelete')"
+                        ng-click="delPolicy(policy.name)">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    <span translate>Delete</span>
+                </button>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>
