@@ -1,0 +1,70 @@
+#!python
+import pip
+from subprocess import call
+import getopt
+import sys
+import os
+
+
+def usage():
+    print """
+privacyidea-pip-update
+
+    -f, --force    force the update
+    -h, --help     show this help
+    """
+
+
+def update():
+    for dist in pip.get_installed_distributions():
+        call("pip install --upgrade " + dist.project_name, shell=True)
+
+
+def update_db_schema(environment):
+    mig_path = environment + "/lib/privacyidea/migrations"
+    # stamp the database
+    call("pi-manage db stamp 4f32a4e1bf33 -d {0}".format(mig_path), shell=True)
+    # update the database schema
+    call("pi-manage db upgrade -d {0}".format(mig_path), shell=True)
+
+
+def main():
+    force = False
+
+    environment = os.environ.get("VIRTUAL_ENV")
+
+    if not environment:
+        print("This script must be run inside a python virtual environment!")
+        sys.exit(2)
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hf", ["help", "force"])
+    except getopt.GetoptError as e:
+        print(str(e))
+        sys.exit(1)
+
+    for o, a in opts:
+        if o in ("-f", "--force"):
+            force = True
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit(2)
+
+    if force:
+        update()
+    else:
+        answer = False
+        while not answer:
+            res = raw_input("Do you really want to update your "
+                            "python environment and the DB schema? (y/N)")
+            answer = res.lower() in ['y', 'n', '']
+
+        if res.lower() == 'y':
+            update()
+            update_db_schema(environment)
+        else:
+            print("You canceled the update process.")
+
+
+if __name__ == "__main__":
+    main()
