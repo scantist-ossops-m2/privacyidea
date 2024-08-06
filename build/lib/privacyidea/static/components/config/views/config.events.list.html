@@ -1,0 +1,62 @@
+<div class="table-responsive">
+    <table class="table table-bordered table-responsive table-striped">
+        <thead>
+        <tr>
+            <th translate>Active</th>
+            <th translate>Id</th>
+            <th translate>Description</th>
+            <th translate>Events</th>
+            <th translate>Handlermodule</th>
+            <th translate>Conditions</th>
+            <th translate>Action</th>
+            <th translate>Options</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="event in events">
+            <td>
+                <span ng-show="event.active"
+                      class="glyphicon glyphicon-ok"
+                      ng-click="disableEvent(event.id)">
+                </span>
+                <span ng-hide="event.active"
+                      class="glyphicon glyphicon-minus"
+                      ng-click="enableEvent(event.id)">
+                </span>
+            </td>
+            <td>
+                <a ui-sref="config.events.details({eventid: event.id})">
+                    {{ event.id }}</a>
+            </td>
+            <td>
+                <a ui-sref="config.events.details({eventid: event.id})">
+                    {{ event.name }}</a>
+            </td>
+            <td>
+                {{ event.event | json}}
+            </td>
+            <td>
+                {{ event.handlermodule }}
+            </td>
+            <td>
+                {{ event.conditions }}
+            </td>
+            <td>
+                {{ event.action }}
+            </td>
+            <td>
+                {{ event.options | json }}
+            </td>
+            <td>
+                <button class="btn btn-danger"
+                        ng-show="checkRight('eventhandling_write')"
+                        ng-click="delEvent(event.id)">
+                        <span class="glyphicon glyphicon-trash"></span>
+                        <span translate>Delete</span>
+                </button>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>
