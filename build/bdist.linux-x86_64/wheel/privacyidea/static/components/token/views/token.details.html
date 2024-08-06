@@ -1,0 +1,582 @@
+<h3 name="Token Details"><translate>Token details for {{ tokenSerial }}
+        </translate>
+    <a class="btn btn-default" ui-sref="audit.log({serial: tokenSerial})"
+       translate>
+        View token in Audit log</a>
+</h3>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <tr>
+            <td translate>Type</td>
+            <td>{{ token.tokentype }}</td>
+            <td>
+                <button class="btn btn-danger" ng-click="delete()"
+                        id="deleteButton"
+                        ng-disabled="!checkRight('delete')">
+                    <span class="glyphicon glyphicon-trash"></span>
+                    <span translate>Delete</span>
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <td translate>Active</td>
+            <td>
+            <span class="label label-success" ng-show="token.active"
+                    translate>active
+            </span>
+            <span class="label label-danger" ng-hide="token.active"
+                    translate>disabled
+            </span>
+            <span class="label label-danger" ng-show="token.locked"
+                  translate>locked</span>
+            <span class="label label-danger" ng-show="token.revoked"
+                  translate>revoked</span>
+            <td>
+            <span ng-show="token.active"
+                  ng-click="disable()">
+                <button class="btn btn-danger"
+                        id="disableButton"
+                        ng-disabled="!checkRight('disable')"
+                        translate>Disable</button>
+            </span>
+            <span ng-show="!token.active && !token.locked"
+                  ng-click="enable()">
+                <button class="btn btn-success"
+                        id="enableButton"
+                        ng-disabled="!checkRight('enable')"
+                        translate>Enable</button>
+            </span>
+            <span ng-show="!token.revoked"
+                  ng-click="revoke()">
+                <button class="btn btn-danger" translate
+                        id="revokeButton"
+                        ng-disabled="!checkRight('revoke')">
+                    Revoke</button>
+            </span>
+            </td>
+        </tr>
+        <tr token-data-edit text="{{'Maxfail' | translate }}"
+            button-text="{{ 'Set max fail'|translate}}"
+            token-data="{{ token.maxfail }}"
+            token-key="max_failcount"
+            token-locked="{{ token.locked }}"
+            input-pattern="[0-9]*"
+            callback-cancel="get()"
+            callback="set(key, value)"
+            logged-in-user="loggedInUser"></tr>
+        <tr>
+            <td translate>Fail counter</td>
+            <td><span class="label"
+                      ng-class="{'label-success': token.failcount==0,
+                   'label-warning': token.failcount>0,
+                   'label-danger': token.failcount>=token.maxfail}">
+            {{ token.failcount }}
+            </span></td>
+            <td>
+                <button class="btn btn-success"
+                        id="resetButton"
+                        ng-show="token.failcount > 0"
+                        ng-click="reset()"
+                        ng-disabled="!checkRight('reset')"
+                        translate>Reset fail counter
+                </button>
+            </td>
+        </tr>
+        <tr ng-hide="token.tokentype == 'spass'">
+            <td translate>OTP Length</td>
+            <td>{{ token.otplen }}</td>
+            <td></td>
+        </tr>
+        <tr ng-hide="token.tokentype == 'spass'">
+            <td translate>Count</td>
+            <td>{{ token.count }}</td>
+            <td></td>
+        </tr>
+        <tr ng-hide="token.tokentype == 'spass'"
+            token-data-edit text="{{ 'Count Window'|translate }}"
+            button-text="{{ 'Set count window'|translate }}"
+            token-data="{{ token.count_window }}"
+            token-key="count_window"
+            token-locked="{{ token.locked }}"
+            input-pattern="[0-9]*"
+            callback-cancel="get()"
+            callback="set(key, value)"
+            logged-in-user="loggedInUser"></tr>
+        <tr ng-hide="token.tokentype == 'spass'"
+            token-data-edit text="{{ 'Sync Window'|translate }}"
+            button-text="{{ 'Set sync window'|translate }}"
+            token-data="{{ token.sync_window }}"
+            token-key="sync_window"
+            token-locked="{{ token.locked }}"
+            input-pattern="[0-9]*"
+            callback-cancel="get()"
+            callback="set(key, value)"
+            logged-in-user="loggedInUser"></tr>
+        <!-- If setData is called within the directive tokenDataEdit,
+        the function set in the parent scope is called -->
+        <tr token-data-edit text="{{ 'Description'|translate }}"
+            button-text="{{ 'Set description'|translate }}"
+            token-data="{{ token.description }}"
+            token-locked="{{ token.locked }}"
+            token-key="description"
+            callback-cancel="get()"
+            callback="set(key, value)"
+            logged-in-user="loggedInUser"></tr>
+        <tr>
+            <td translate>Info</td>
+            <td>
+                <ul>
+                    <li ng-repeat="(k,v) in token.info">
+                        <span ng-show="k=='certificate'">
+                            <a download="{{ token.serial }}.pem"
+                               ng-href="{{ certificateBlob }}">
+                                <span class="glyphicon glyphicon-bookmark"
+                                      aria-hidden="true"></span>
+                                <span translate>certificate</span></a>.
+                        </span>
+                        <span ng-show="k=='pkcs12'">
+                            <a download="{{ token.serial }}.p12"
+                               ng-href="{{ pkcs12Blob }}">
+                                <span class="glyphicon glyphicon-bookmark"
+                                      aria-hidden="true"></span>
+                                <span translate>PKCS12</span></a>.
+                        </span>
+                        <span ng-hide="['certificate', 'pkcs12']
+                        .indexOf(k)!=-1">
+                            {{ k }}: {{ v | truncate:30 }}
+                        </span>
+                    </li>
+                </ul>
+                <div ng-show="editTokenInfo">
+                    <div class="form-group">
+                        <label for="max_auth_count"
+                                translate>Maximum Authentication Count
+                        </label>
+                        <input ng-model="max_auth_count"
+                               class="form-control"
+                               name="max_auth_count"
+                               type="number"
+                               placeholder="Max allowed auths">
+                    </div>
+                    <div class="form-group">
+                        <label for="max_success_auth_count"
+                                translate>Maximum Success Auth Count
+                        </label>
+                        <input ng-model="max_success_auth_count"
+                               class="form-control"
+                               type="number"
+                               placeholder="Max allowed successful auths"
+                               name="max_success_auth_count">
+                    </div>
+                    <!-- =========== EDIT Validity period ============ -->
+                    <div class="form-group">
+                        <label for="validity_start"
+                                translate>Validity Start
+                        </label>
+                        <p class="input-group">
+                            <input type="text" class="form-control"
+                                   name="validity_start"
+                                   datepicker-popup="dd/MM/yy"
+                                   ng-model="validity_period_start"
+                                   is-open="startOpened"
+                                   min-date="today"
+                                   show-button-bar="false"
+                                   ng-required="true" close-text="Close"/>
+                          <span class="input-group-btn">
+                            <button type="button" class="btn btn-default"
+                                    ng-click="startOpened = openDate($event)"><i
+                                    class="glyphicon glyphicon-calendar"></i>
+                            </button>
+                          </span>
+                        </p>
+                    </div>
+                    <div class="form-group">
+                        <label for="validity_end"
+                                translate>Validity End
+                        </label>
+                        <p class="input-group">
+                            <input type="text" class="form-control"
+                                   name="validity_end"
+                                   datepicker-popup="dd/MM/yy"
+                                   ng-model="validity_period_end"
+                                   is-open="endOpened"
+                                   min-date="today"
+                                   show-button-bar="false"
+                                   ng-required="true" close-text="Close"/>
+                          <span class="input-group-btn">
+                            <button type="button" class="btn btn-default"
+                                    ng-click="endOpened = openDate($event)"><i
+                                    class="glyphicon glyphicon-calendar"></i>
+                            </button>
+                          </span>
+                        </p>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div ng-show="loggedInUser.role == 'admin' && !token.locked">
+                    <button class="btn btn-primary"
+                            id="tiEditButton"
+                            ng-hide="editTokenInfo"
+                            ng-click="editTokenInfo=1"
+                            translate>Edit
+                    </button>
+                    <button class="btn btn-primary"
+                            id="tiSaveButton"
+                            ng-show="editTokenInfo"
+                            ng-click="editTokenInfo=0; saveTokenInfo()"
+                            translate>Save Token Info
+                    </button>
+                    <button class="btn btn-danger"
+                            id="tiCancelButton"
+                            ng-show="editTokenInfo"
+                            ng-click="editTokenInfo=0"
+                            translate>Cancel
+                    </button>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>Realms</td>
+            <td><span ng-hide="editTokenRealm">
+            <ul ng-click="!token.locked ? editTokenRealm = true : null">
+                <li ng-repeat="realm in token.realms">{{ realm }}</li>
+            </ul>
+            </span>
+            <span ng-show="editTokenRealm">
+                <span ng-repeat="(realmname, realm) in realms">
+                    <label for="{{ realmname }}">
+                        <input type="checkbox"
+                               ng-model="selectedRealms[realmname]"
+                               name="group"
+                               id="{{ realmname }}"
+                               ng-checked="selectedRealms[realmname]">
+                        {{ realmname }}
+                    </label><br>
+                </span></span>
+            </td>
+            <td>
+                <div ng-show="loggedInUser.role == 'admin' && !token.locked">
+                    <button class="btn btn-primary"
+                            id="trEditButton"
+                            ng-hide="editTokenRealm"
+                            ng-click="startEditRealm()"
+                            translate>Edit
+                    </button>
+                    <button class="btn btn-primary"
+                            id="trSaveButton"
+                            ng-show="editTokenRealm"
+                            ng-click="saveRealm()"
+                            translate>Save realms
+                    </button>
+                    <button class="btn btn-danger"
+                            id="trCancelButton"
+                            ng-show="editTokenRealm"
+                            ng-click="cancelEditRealm();"
+                            translate>Cancel
+                    </button>
+                </div>
+            </td>
+        </tr>
+
+        <!-- =================== TOKEN FUNCTIONS =============================== -->
+
+        <tr ng-hide="['spass', 'registration'].indexOf(token.tokentype) >= 0
+            || token.locked">
+            <td>
+                <input type="text" ng-model="otp1"
+                       class="form-control"
+                       placeholder="{{ 'Enter first OTP value' | translate }}">
+            </td>
+            <td>
+                <input type="text" ng-model="otp2"
+                       class="form-control"
+                       placeholder="{{ 'Enter second OTP value' | translate }}">
+            </td>
+            <td>
+                <button class="btn btn-primary"
+                        id="resyncButton"
+                        ng-disabled="(!otp1 || !otp2)"
+                        ng-click="resyncToken()"
+                        ng-disabled="!checkRight('resync')">
+                    <span class="glyphicon glyphicon-refresh"></span>
+                    <span translate>Resync Token</span>
+                </button>
+            </td>
+        </tr>
+
+        <tr ng-hide="token.locked || !checkRight('setpin')">
+            <td>
+                <input type="password" ng-model="pin1"
+                       class="form-control"
+                       placeholder="{{ 'Enter PIN for token'|translate }}">
+            </td>
+            <td>
+                <input type="password" ng-model="pin2"
+                       class="form-control"
+                       placeholder="{{ 'Enter PIN again'|translate }}">
+            </td>
+            <td>
+                <button class="btn btn-primary"
+                        id="setPinButton"
+                        ng-disabled="pin1 != pin2"
+                        ng-click="setPin()">
+                    <span class="glyphicon glyphicon-pushpin"></span>
+                    <span translate>Set PIN</span>
+                </button>
+            </td>
+        </tr>
+
+        <tr ng-hide="token.locked">
+            <td><input type="checkbox" ng-model="showPassword"
+                       id="showPassword"><label for="showPassword"
+                    translate> Show password</label></td>
+            <td ng-hide="token.tokentype == 'registration'">
+                <input type="text" ng-model="testPassword"
+                       name="testPassword"
+                       ng-show="showPassword"
+                       class="form-control"
+                       placeholder="{{ testTokenPlaceholder }}">
+                <input type="password" ng-model="testPassword"
+                       ng-hide="showPassword"
+                       name="testPassword"
+                       class="form-control"
+                       placeholder="{{ testTokenPlaceholder }}">
+            </td>
+            <td>
+
+                <button class="btn btn-primary" ng-disabled="!testPassword"
+                        id="testOtpButton"
+                        tooltip="{{ 'Check with OTP PIN.'|translate }}"
+                        ng-click="testOtp()">
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <span translate>Test token</span>
+                </button>
+                <button class="btn btn-primary" ng-disabled="!testPassword"
+                        id="testOtpOnlyButton"
+                        tooltip="{{ 'Check OTP only.'|translate }}"
+                        ng-click="testOtp('1')">
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <span translate>Test OTP only</span>
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <!-- =================== USER ASSIGN ================= -->
+
+    <div ng-show="loggedInUser.role == 'admin'">
+        <h4 ng-show="token.user_id" translate>Assgined User</h4>
+        <table ng-show="token.user_id"
+               class="table table-striped table-bordered">
+            <tr>
+                <td translate>Username</td>
+                <td><a ui-sref="user.details({username: token.username,
+            realmname: token.user_realm,
+            resolvername: token.resolver,
+            editable: token.user_editable})">
+                    {{ token.username }}
+                </a></td>
+                <td>
+                    <button ng-hide="token.locked"
+                            id="unassignAdminButton"
+                            ng-click="unassign()"
+                            class="btn btn-warning">
+                        <span class="glyphicon glyphicon-resize-full"></span>
+                        <span translate>Unassign User</span>
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td translate>Realm</td>
+                <td><a ui-sref="config.realms.list">{{ token.user_realm }}</a>
+                </td>
+            </tr>
+            <tr>
+                <td translate>Resolver</td>
+                <td><a ui-sref="config.resolvers.list">{{ token.resolver }}</a>
+                </td>
+            </tr>
+            <tr>
+                <td translate>User Id</td>
+                <td>{{ token.user_id }}</td>
+            </tr>
+        </table>
+    </div>
+    <div ng-show="loggedInUser.role== 'user' && !token.locked
+        && checkRight('unassign')">
+        <button ng-click="unassign()"
+                id="unassignUserButton"
+                class="btn btn-warning">
+            <span class="glyphicon glyphicon-resize-full"></span>
+            <span translate>Unassign Token</span>
+        </button>
+    </div>
+</div>
+
+
+<div ng-show="checkRight('assign')">
+<h4 ng-hide="token.user_id || token.locked" translate>
+    Assign User</h4>
+<form ng-hide="token.user_id || token.locked"
+      name="formAssignToken"
+      role="form" validate>
+    <div assign-user new-user-object="newUser" realms="realms"></div>
+
+    <div class="text-center">
+        <button ng-click="assignUser()"
+                id="assignButton"
+                ng-disabled="formAssignToken.$invalid"
+                class="btn btn-primary">
+            <span class="glyphicon glyphicon-resize-small"></span>
+            <span translate>Assign User</span>
+        </button>
+    </div>
+</form>
+</div>
+
+<!-- ============ Machines ======================= -->
+<div ng-show="loggedInUser.role == 'admin' &&
+                checkRight('manage_machine_tokens')">
+    <h4 translate>Machines this token is attached to</h4>
+
+
+    <pagination ng-show="machineCount > machinesPerPage"
+                previous-text="{{ 'Previous'|translate }}"
+                next-text="{{ 'Next'|translate }}"
+                last-text="{{ 'Last'|translate }}"
+                first-text="{{ 'First'|translate }}"
+                total-items="machineCount" ng-model="params.page"
+                items-per-page="{{ machinesPerPage }}"
+                max-size="5"
+                boundary-links="true" ng-change="pageChanged()"></pagination>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+            <tr>
+                <th translate>Machine ID</th>
+                <th translate>Hostname</th>
+                <th translate>Resolver</th>
+                <th translate>Application</th>
+                <th translate>Options</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="machine in machinedata">
+                <td>
+                    <a ui-sref="machine.details({machineid:machine.machine_id,
+                    machineresolver:machine.resolver})"
+                       ng-click="$rootScope.returnTo=token.list;">
+                        {{ machine.machine_id }}</a></td>
+                <td>{{ machine.hostname }}</td>
+                <td>{{ machine.resolver }}</td>
+                <td>{{ machine.application }}</td>
+                <!-- Options -->
+                <td ng-hide="machine.optionsEdit">
+                    <span ng-repeat="option
+                    in Applications[machine.application].options.required">
+                        <b>{{ option | capitalize }}:</b>
+                        {{ machine.options[option] }}<br>
+                    </span>
+                    <span ng-repeat="option
+                    in Applications[machine.application].options.optional">
+                        <b>{{ option | capitalize }}:</b>
+                        {{ machine.options[option] }}<br>
+                    </span>
+                </td>
+                <!-- Edit options -->
+                <td ng-show="machine.optionsEdit">
+                    <div class="form-group"
+                         ng-repeat="option
+                         in Applications[machine.application].options.required">
+                        <label for="option_{{ option }}">{{ option | capitalize }}</label>
+                        <input name="option_{{ option }}"
+                               ng-model="machine.options[option]"
+                               class="form-control" ng-required="1"
+                               placeholder="required">
+                    </div>
+                    <div class="form-group"
+                         ng-repeat="option
+                         in Applications[machine.application].options.optional">
+                        <label for="option_{{ option }}">{{ option | capitalize }}</label>
+                        <input name="option_{{ option }}"
+                               ng-model="machine.options[option]"
+                               class="form-control" placeholder="optional">
+                    </div>
+                </td>
+                <td ng-hide="machine.optionsEdit">
+                    <button class="btn btn-primary"
+                            ng-click="machine.optionsEdit=true"
+                            translate>Edit Options
+                    </button>
+                    <button class="btn btn-danger"
+                            ng-click="detachMachineToken(machine.machine_id,
+                            machine.resolver, machine.application)"
+                            translate>Detach
+                    </button>
+                </td>
+                <td ng-show="machine.optionsEdit">
+                    <button class="btn btn-primary"
+                            ng-click="saveOptions(machine.machine_id,
+                            machine.resolver, machine.application,
+                            machine.options);
+                            machine.optionsEdit=false"
+                            translate>Save Options
+                    </button>
+                    <button class="btn btn-danger"
+                            ng-click="machine.optionsEdit=false"
+                            translate>Cancel
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div ng-show="checkRight('manage_machine_tokens')">
+    <h4 translate ng-hide="token.locked">Attach to a new Machine</h4>
+
+    <form name="formAttachMachine" role="form"
+          ng-hide="token.locked"
+          validate>
+        <div attach-machine new-machine="newMachine"></div>
+
+        <div class="form-group">
+            <label for="application" translate>Application</label>
+            <select class="form-control"
+                    id="application"
+                    ng-model="form.application"
+                    ng-required="1"
+                    ng-options="app for app in formInit.application"
+                    >
+            </select>
+        </div>
+
+        <!-- Options for a new MachineToken -->
+        <div class="form-group"
+             ng-repeat="option in Applications[form.application].options.required">
+            <label for="option_{{ option }}">{{ option | capitalize }}</label>
+            <input name="option_{{ option }}"
+                   ng-model="form.options[option]"
+                   class="form-control" ng-required="1"
+                   placeholder="required">
+        </div>
+        <div class="form-group"
+             ng-repeat="option in Applications[form.application].options.optional">
+            <label for="option_{{ option }}">{{ option | capitalize }}</label>
+            <input name="option_{{ option }}"
+                   ng-model="form.options[option]"
+                   class="form-control" placeholder="optional">
+        </div>
+
+        <div class="text-center">
+            <button ng-click="attachMachine()"
+                    ng-disabled="formAttachMachine.$invalid"
+                    class="btn btn-primary" translate>Attach Machine
+            </button>
+        </div>
+    </form>
+    </div>
+</div>
