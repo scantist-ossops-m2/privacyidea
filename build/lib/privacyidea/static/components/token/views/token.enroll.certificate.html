@@ -1,0 +1,98 @@
+<p class="help-block" translate>
+    The Certificate Token lets you enroll an x509 ceritificate
+    by the given CA.
+</p>
+
+<h4 translate>Token data</h4>
+
+<ul class="nav nav-pills">
+    <li role="presentation"
+        ng-click="radioCSR='csrgenerate'"
+        ng-class="{active: radioCSR == 'csrgenerate'}">
+        <a translate>Generate Request</a>
+    </li>
+    <li role="presentation"
+        ng-click="radioCSR='csrupload'"
+        ng-class="{active: radioCSR == 'csrupload'}">
+        <a translate>Upload Request</a>
+    </li>
+    <li role="presentation"
+        ng-click="radioCSR='certupload'"
+        ng-class="{active: radioCSR == 'certupload'}">
+        <a translate>Upload Certificate</a>
+    </li>
+</ul>
+
+<div class="well well-lg">
+    <div class="form-group">
+        <label for="ca" translate>CA Connector</label>
+        <select class="form-control"
+                ng-model="form.ca"
+                name="ca"
+                ng-options="connectorname for connectorname in CAConnectors"></select>
+    </div>
+
+
+    <!--------------- Upload Certificate ---------------->
+    <div class="form-group" ng-show="radioCSR == 'certupload'">
+        <label for="certificate" translate>Certificate (PEM)</label>
+    <textarea type="text"
+              rows="5"
+              class="form-control"
+              placeholder="Paste the Certificate"
+              ng-model="form.certificate" name="certificate">
+    </textarea>
+    </div>
+
+    <!--------------- Upload Request ---------------->
+    <div class="form-group" ng-show="radioCSR == 'csrupload'">
+        <label for="request" translate>Certificate Signing Request (PEM)</label>
+    <textarea type="text"
+              rows="5"
+              class="form-control"
+              placeholder="Paste the Certificate Signing Request"
+              ng-model="form.request" name="request">
+    </textarea>
+    </div>
+
+    <!------------ Generate Request --------------------->
+    <div ng-show="radioCSR == 'csrgenerate'">
+
+        <div class="form-group">
+            <input type="checkbox" ng-model="form.genkey"
+                   name="generate" id="generate">
+            <label for="generate" translate>Generate the Key Pair on the Server</label>
+
+            <div ng-show="form.genkey">
+                <p class="help-block" translate>
+                    The server will create the private RSA key and store it in
+                    the
+                    database. If want to create the key pair client side,
+                    uncheck
+                    this option.
+                </p>
+            </div>
+        </div>
+
+        <div ng-show="!form.genkey">
+            <p class="help-block" translate>
+                The RSA keys will be generated in the browser.
+                You will be taken to a new browser window, where you can
+                create the Certificate Request. The private key remains in
+                your browser and you will be able to install the certificate
+                to the browser.
+            </p>
+            <p class="help-block" translate>
+                Microsoft Internet Explorer is not supported.
+            </p>
+            <div class="text-center">
+                <button ng-click="openCertificateWindow()"
+                class="btn btn-primary" translate>Open new tab to create certificate
+                    request
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
