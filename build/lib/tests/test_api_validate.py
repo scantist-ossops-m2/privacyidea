@@ -73,40 +73,6 @@ class ValidateAPITestCase(MyTestCase):
                                            data={"serial": "123456"}):
             self.assertRaises(ParameterError, self.app.full_dispatch_request)
 
-    def test_01_check_invalid_input(self):
-        # Empty username
-        with self.app.test_request_context('/validate/check',
-                                           method='POST',
-                                           data={"user": " ",
-                                                 "pass": ""}):
-            res = self.app.full_dispatch_request()
-            self.assertTrue(res.status_code == 400, res)
-            result = json.loads(res.data).get("result")
-            error_msg = result.get("error").get("message")
-            self.assertEqual("ERR905: You need to specify a serial or a user.", error_msg)
-
-        # wrong username
-        with self.app.test_request_context('/validate/check',
-                                           method='POST',
-                                           data={"user": "h%h",
-                                                 "pass": ""}):
-            res = self.app.full_dispatch_request()
-            self.assertTrue(res.status_code == 400, res)
-            result = json.loads(res.data).get("result")
-            error_msg = result.get("error").get("message")
-            self.assertEqual("ERR905: Invalid user.", error_msg)
-
-        # wrong serial
-        with self.app.test_request_context('/validate/check',
-                                           method='POST',
-                                           data={"serial": "*",
-                                                 "pass": ""}):
-            res = self.app.full_dispatch_request()
-            self.assertTrue(res.status_code == 400, res)
-            result = json.loads(res.data).get("result")
-            error_msg = result.get("error").get("message")
-            self.assertEqual("ERR905: Invalid serial number.", error_msg)
-
 
     def test_03_check_user(self):
         # get the original counter
@@ -179,7 +145,7 @@ class ValidateAPITestCase(MyTestCase):
                                            method='GET',
                                            query_string=urlencode(
                                                     {"user": "cornelius",
-                                                    "pass": "pin287082"})):
+                                                     "pass": "pin287082"})):
             res = self.app.full_dispatch_request()
             self.assertTrue(res.status_code == 200, res)
             result = json.loads(res.data).get("result")
@@ -206,8 +172,43 @@ class ValidateAPITestCase(MyTestCase):
             res = self.app.full_dispatch_request()
             self.assertTrue(res.status_code == 200, res)
             result = json.loads(res.data).get("result")
+            details = json.loads(res.data).get("detail")
             self.assertTrue(result.get("status") is True, result)
             self.assertTrue(result.get("value") is False, result)
+            self.assertEqual(details.get("message"), "wrong otp value. "
+                                                     "previous otp used again")
+
+    def test_05_check_serial_with_no_user(self):
+        # Check a token per serial when the token has no user assigned.
+        init_token({"serial": "nouser",
+                    "otpkey": self.otpkey,
+                    "pin": "pin"})
+        with self.app.test_request_context('/validate/check',
+                                           method='POST',
+                                           data={"serial": "nouser",
+                                                 "pass": "pin359152"}):
+            res = self.app.full_dispatch_request()
+            self.assertTrue(res.status_code == 200, res)
+            result = json.loads(res.data).get("result")
+            details = json.loads(res.data).get("detail")
+            self.assertEqual(result.get("status"), True)
+            self.assertEqual(result.get("value"), True)
+
+    def test_05_check_serial_with_no_user(self):
+        # Check a token per serial when the token has no user assigned.
+        init_token({"serial": "nouser",
+                    "otpkey": self.otpkey,
+                    "pin": "pin"})
+        with self.app.test_request_context('/validate/check',
+                                           method='POST',
+                                           data={"serial": "nouser",
+                                                 "pass": "pin359152"}):
+            res = self.app.full_dispatch_request()
+            self.assertTrue(res.status_code == 200, res)
+            result = json.loads(res.data).get("result")
+            details = json.loads(res.data).get("detail")
+            self.assertEqual(result.get("status"), True)
+            self.assertEqual(result.get("value"), True)
 
     def test_06_fail_counter(self):
         # test if a user has several tokens that the fail counter is increased
@@ -367,13 +368,15 @@ class ValidateAPITestCase(MyTestCase):
             result = json.loads(res.data).get("result")
             detail = json.loads(res.data).get("detail")
             value = result.get("value")
+            attributes = value.get("attributes")
             self.assertEqual(value.get("auth"), True)
-            self.assertEqual(value.get("email"), "user@localhost.localdomain")
-            self.assertEqual(value.get("givenname"), "Cornelius")
-            self.assertEqual(value.get("mobile"), "+491111111")
-            self.assertEqual(value.get("phone"),  "+491234566")
-            self.assertEqual(value.get("realm"),  "realm1")
-            self.assertEqual(value.get("username"),  "cornelius")
+            self.assertEqual(attributes.get("email"),
+                             "user@localhost.localdomain")
+            self.assertEqual(attributes.get("givenname"), "Cornelius")
+            self.assertEqual(attributes.get("mobile"), "+491111111")
+            self.assertEqual(attributes.get("phone"),  "+491234566")
+            self.assertEqual(attributes.get("realm"),  "realm1")
+            self.assertEqual(attributes.get("username"),  "cornelius")
 
     def test_11_challenge_response_hotp(self):
         # set a chalresp policy for HOTP
@@ -630,3 +633,36 @@ class ValidateAPITestCase(MyTestCase):
             self.assertTrue(res.status_code == 200, res)
             result = json.loads(res.data).get("result")
             self.assertTrue(result.get("value"))
+
+    def test_16_autoresync_hotp(self):
+        serial = "autosync1"
+        token = init_token({"serial": serial,
+                            "otpkey": self.otpkey,
+                            "pin": "async"}, User("cornelius", self.realm2))
+        set_privacyidea_config("AutoResync", True)
+        token.set_sync_window(10)
+        token.set_count_window(5)
+        # counter = 8, is out of sync
+        with self.app.test_request_context('/validate/check',
+                                           method='POST',
+                                           data={"user":
+                                                    "cornelius@"+self.realm2,
+                                                 "pass": "async399871"}):
+            res = self.app.full_dispatch_request()
+            self.assertEqual(res.status_code, 200)
+            result = json.loads(res.data).get("result")
+            self.assertEqual(result.get("value"), False)
+
+        # counter = 9, will be autosynced.
+        # Authentication is successful
+        with self.app.test_request_context('/validate/check',
+                                           method='POST',
+                                           data={"user":
+                                                    "cornelius@"+self.realm2,
+                                                 "pass": "async520489"}):
+            res = self.app.full_dispatch_request()
+            self.assertEqual(res.status_code, 200)
+            result = json.loads(res.data).get("result")
+            self.assertEqual(result.get("value"), True)
+
+        delete_privacyidea_config("AutoResync")

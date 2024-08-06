@@ -1,0 +1,66 @@
+<h2 translate>EMail Token settings</h2>
+<p class="help-block" translate>
+    The EMail token is a challenge response token that sends the OTP value to
+    the given email address, when the correct OTP PIN was presented by the user.
+</p>
+
+<div class="form-group">
+    <label for="mailServer" translate>Mail Server</label>
+    <input type="text"
+           required
+           class="form-control"
+           placeholder="your.mailserver.net"
+           ng-model="form['email.mailserver']" name="mailserver">
+</div>
+
+<div class="form-group">
+    <label for="mailport" translate>Port</label>
+    <input type="text"
+           class="form-control"
+           ng-model="form['email.port']" name="mailport">
+</div>
+
+<div class="form-group">
+    <label for="mailuser" translate>Mail User</label>
+    <input type="text"
+           class="form-control"
+           placeholder="Username if required"
+           ng-model="form['email.username']" name="mailuser">
+</div>
+
+<div class="form-group">
+    <label for="mailpassword" translate>Mail User Password</label>
+    <input type="password"
+           class="form-control"
+           placeholder="topSecret"
+           ng-model="form['email.password']" name="mailpassword">
+</div>
+
+<div class="form-group">
+    <label for="mailfrom" translate>Mail Sender Address</label>
+    <input type="email"
+           required
+           class="form-control"
+           placeholder="privacyidea@localhost"
+           ng-model="form['email.mailfrom']" name="mailfrom">
+</div>
+
+<div class="form-group">
+    <label for="mailvalid" translate>OTP validity time</label>
+    <p class="help-block" translate>
+        The time in seconds for which the sent OTP value is valid for
+        authentication.
+    </p>
+    <input type="text"
+           class="form-control"
+           ng-model="form['email.validtime']" name="mailvalid">
+</div>
+
+<div class="form-group">
+    <input type="checkbox"
+           ng-model="form['email.tls']"
+           ng-checked="form['email.tls'] == '1'"
+           name="mailtls"
+           id="mailtls">
+    <label for="mailtls" translate>Use TLS</label>
+</div>
