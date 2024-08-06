@@ -1,0 +1,90 @@
+#!python
+from __future__ import print_function
+import pipes
+from subprocess import call, check_output
+import getopt
+import sys
+import os
+
+# We follow the hint at https://pip.pypa.io/en/latest/user_guide/#using-pip-from-your-program to invoke pip.
+PIP_EXECUTABLE = [sys.executable, '-m', 'pip']
+
+
+def usage():
+    print("""
+privacyidea-pip-update
+
+    -f, --force    force the update
+    -h, --help     show this help
+    """)
+
+
+def get_installed_packages():
+    """
+    Get a list of names of all locally installed packages by
+    parsing the output of ``pip freeze --local --all``.
+    """
+    packages = []
+    pip_output = check_output(PIP_EXECUTABLE + ["freeze", "--local", "--all"])
+    for line in pip_output.splitlines():
+        line = line.strip()
+        if "==" in line:
+            package_name = line.split("==", 1)[0]
+            packages.append(package_name)
+    return packages
+
+
+def update():
+    for package_name in get_installed_packages():
+        call(PIP_EXECUTABLE + ["install", "--upgrade", package_name])
+    # Now we need again to upgrade privacyIDEA, so that we get pinned
+    # dependencies like ldap3 or pyasn1. This call will downgrade packages
+    call(PIP_EXECUTABLE + ["install", "--upgrade", "privacyidea"])
+
+
+def update_db_schema(environment):
+    mig_path = environment + "/lib/privacyidea/migrations"
+    # update the database schema
+    call("privacyidea-schema-upgrade {0}".format(pipes.quote(mig_path)), shell=True)
+
+
+def main():
+    force = False
+
+    environment = os.environ.get("VIRTUAL_ENV")
+
+    if not environment:
+        print("This script must be run inside a python virtual environment!")
+        sys.exit(2)
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hf", ["help", "force"])
+    except getopt.GetoptError as e:
+        print(str(e))
+        sys.exit(1)
+
+    for o, a in opts:
+        if o in ("-f", "--force"):
+            force = True
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit(2)
+
+    if force:
+        update()
+    else:
+        answer = False
+        while not answer:
+            res = raw_input("Do you really want to update your "
+                            "python environment and the DB schema? (y/N)")
+            answer = res.lower() in ['y', 'n', '']
+
+        if res.lower() == 'y':
+            update()
+            update_db_schema(environment)
+        else:
+            print("You canceled the update process.")
+
+
+if __name__ == "__main__":
+    main()
