@@ -1,0 +1,111 @@
+<div class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <a class="navbar-brand" ui-sref="token.list">privacyIDEA</a>
+        <button type="button" class="navbar-toggle"
+                data-toggle="collapse" data-target=".myMainNavbar"
+                aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+
+        <div class="navbar-collapse collapse myMainNavbar">
+            <ul class="nav navbar-nav" ng-hide="token_wizard">
+                <li ng-class="{active: $state.includes('token')}"
+                    ng-show="loggedInUser.role">
+                    <a ui-sref="token.list">
+                    <span class="glyphicon glyphicon-phone"
+                          aria-hidden="true"></span>
+                        <translate>Tokens</translate>
+                    </a></li>
+                <li ng-class="{active: $state.includes('user')}"
+                    ng-show="loggedInUser.role == 'admin'">
+                    <a ui-sref="user.list">
+                    <span class="glyphicon glyphicon-user"
+                          aria-hidden="true"></span>
+                        <translate>Users</translate>
+                    </a></li>
+
+                <li ng-class="{active: $state.includes('user')}"
+                    ng-show="loggedInUser.role == 'user' &&
+                        checkRight('userlist')">
+                    <a ui-sref="user.password">
+                    <span class="glyphicon glyphicon-user"
+                          aria-hidden="true"></span>
+                        <translate>User</translate>
+                    </a></li>
+
+                <li ng-class="{active: $state.includes('machine')}"
+                    ng-show="loggedInUser.role == 'admin'">
+                    <a ui-sref="machine.list">
+                    <span class="glyphicon glyphicon-tasks"
+                          aria-hidden="true"></span>
+                        <translate>Machines</translate>
+                    </a></li>
+                <li ng-class="{active: $state.includes('config')}"
+                    ng-show="loggedInUser.role == 'admin'">
+                    <a ui-sref="config.system">
+                        <span class="glyphicon glyphicon-cog"
+                              aria-hidden="true"></span>
+                        <translate>Config</translate>
+                    </a>
+                </li>
+                <li ng-class="{active: $state.includes('audit')}"
+                    ng-show="loggedInUser.role && checkRight('auditlog')">
+                    <a ui-sref="audit">
+                        <span class="glyphicon glyphicon-search"
+                              aria-hidden="true"></span>
+                        <translate>Audit</translate>
+                    </a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li ng-class="{active: $state.includes('register')}"
+                    ng-show="registrationAllowed">
+                    <a ui-sref="register" ng-hide="loggedInUser.username"
+                       translate>Register</a>
+                </li>
+                <li ng-class="{active: $state.includes('login')}">
+                    <a ui-sref="login" ng-hide="loggedInUser.username"
+                       translate>Login</a>
+                </li>
+                <li>
+                    <div class="btn-group" ng-show="loggedInUser.username">
+                        <button type="button" class="btn btn-warning">
+                            {{ loggedInUser.username }}
+                            @{{ loggedInUser.realm }}
+                            ({{ loggedInUser.role }})
+                        </button>
+                        <button type="button"
+                                class="btn btn-warning dropdown-toggle"
+                                data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            <span class="caret"></span>
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="http://privacyidea.readthedocs.org/en/v{{ privacyideaVersionNumber }}" 
+				target="documentation" translate>
+                                Online Documentation</a></li>
+                            <li><a href="https://groups.google.com/forum/#!forum/privacyidea" 
+				target="_external" translate>Community</a></li>
+                            <li><a href="https://netknights.it/leistungen/support/"
+				target="_external" translate
+				>Support</a></li>
+                            <li class="divider"></li>
+                            <li ng-click="logout()">
+                                <a href="#" translate>Logout</a></li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div inform class="inform-fixed inform-shadow"></div>
+
+<div class="alert alert-warning" ng-show="logoutWarning" translate>
+    You will be logged out in {{ myCountdown }} second(s).
+</div>

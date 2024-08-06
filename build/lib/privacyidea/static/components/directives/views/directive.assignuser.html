@@ -1,0 +1,32 @@
+<!--
+This is the directive for assigning users.
+-->
+<div class="form-group">
+    <label for="realm" translate>Realm</label>
+    <select class="form-control"
+            name="realm" ng-model="newUserObject.realm"
+            ng-options="realmname as realmname for (realmname, realm) in
+            realms">
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="username" translate>Username</label>
+    <input name="username" type="text" ng-model="newUserObject.user"
+           placeholder="{{ 'start typing a username'|translate }}"
+           typeahead="newuser for newuser in loadUsers($viewValue)"
+           typeahead-loading="loadingUsers" class="form-control" >
+    <i ng-show="loadingUsers" class="glyphicon glyphicon-refresh"
+            translate>Loading users...</i>
+</div>
+<div class="form-group">
+    <label for="otppin" translate>PIN</label>
+    <input name="otppin" ng-model="newUserObject.pin"
+            type=password class="form-control"
+            euqals="{{pin2}}"
+            placeholder="{{ 'Type a password'|translate }}">
+    <input name="otppin2" ng-model="pin2"
+            type=password class="form-control"
+            equals="{{newUserObject.pin}}"
+            placeholder="{{ 'Repeat password'|translate }}">
+</div>
