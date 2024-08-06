@@ -20,31 +20,10 @@
 
 import logging
 import functools
+log = logging.getLogger(__name__)
 from privacyidea.lib.error import TokenAdminError
 from privacyidea.lib.error import ParameterError
-from privacyidea.lib import _
-log = logging.getLogger(__name__)
-
-
-def check_token_locked(func):
-    """
-    Decorator to check if a token is locked or not.
-    The decorator is to be used in token class methods.
-    It can be used to avoid performing an action on a locked token.
-
-    If the token is locked, a TokenAdminError is raised.
-    """
-    @functools.wraps(func)
-    def token_locked_wrapper(*args, **kwds):
-        # The token object
-        token = args[0]
-        if token.is_locked():
-            raise TokenAdminError(_("This action is not possible, since the "
-                                    "token is locked"), id=1007)
-        f_result = func(*args, **kwds)
-        return f_result
-
-    return token_locked_wrapper
+from flask import request
 
 
 def check_user_or_serial(func):
@@ -59,12 +38,12 @@ def check_user_or_serial(func):
         # If there is no user and serial keyword parameter and if
         # there is no normal argument, we do not have enough information
         serial = kwds.get("serial")
-        user = kwds.get("user")
-        # We have no serial! The serial would be the first arg
-        if (serial is None and (len(args) == 0 or args[0] is None) and
-                (user is None or (user is not None and user.is_empty()))):
-            # We either have an empty User object or None
-            raise ParameterError(ParameterError.USER_OR_SERIAL)
+        user= kwds.get("user")
+        if serial is None and (len(args) == 0 or args[0] is None):
+            # We have no serial! The serial would be the first arg
+            if user is None or (user is not None and user.is_empty()):
+                # We either have an empty User object or None
+                raise ParameterError(ParameterError.USER_OR_SERIAL)
 
         f_result = func(*args, **kwds)
         return f_result
@@ -72,31 +51,23 @@ def check_user_or_serial(func):
     return user_or_serial_wrapper
 
 
-class check_user_or_serial_in_request(object):
+def check_user_or_serial_in_request(func):
     """
     Decorator to check user and serial in a request.
     If the request does not contain a serial number (serial) or a user
     (user) it will throw a ParameterError.
     """
-    def __init__(self, request):
-        self.request = request
 
-    def __call__(self, func):
-        @functools.wraps(func)
-        def check_user_or_serial_in_request_wrapper(*args, **kwds):
-            user = self.request.all_data.get("user", "").strip()
-            serial = self.request.all_data.get("serial", "").strip()
-            if not serial and not user:
-                raise ParameterError(_("You need to specify a serial or a user."))
-            if "*" in serial:
-                raise ParameterError(_("Invalid serial number."))
-            if "%" in user:
-                raise ParameterError(_("Invalid user."))
+    @functools.wraps(func)
+    def check_user_or_serial_in_request_wrapper(*args, **kwds):
+        user = request.all_data.get("user")
+        serial = request.all_data.get("serial")
+        if not serial and not user:
+            raise ParameterError("You need to specify a serial or a user.")
+        f_result = func(*args, **kwds)
+        return f_result
 
-            f_result = func(*args, **kwds)
-            return f_result
-
-        return check_user_or_serial_in_request_wrapper
+    return check_user_or_serial_in_request_wrapper
 
 
 def check_copy_serials(func):
@@ -122,4 +93,3 @@ def check_copy_serials(func):
         return f_result
 
     return check_serial_wrapper
-
