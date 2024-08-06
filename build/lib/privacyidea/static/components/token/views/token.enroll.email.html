@@ -1,0 +1,23 @@
+<p class="help-block" translate>
+    The Email Token sends the OTP value to the users email address.
+</p>
+
+<h4 translate>Token data</h4>
+<div ng-hide="form['email.mailserver']" translate class="bg-danger">
+    For Email tokens to work properly you need to set the
+    <a ui-sref="config.tokens({tokentype:'email'})">Email Token Config</a>!
+</div>
+
+<div class="form-group">
+    <label for="phone" translate>Email Address</label>
+    <input type="email"
+           autofocus
+           class="form-control"
+           placeholder="Users email address..."
+           ng-model="form.email" name="email" />
+    <label for="description" translate>Description</label>
+    <input type="text" class="form-control"
+            placeholder="Some nice words..."
+            ng-model="form.description" />
+</div>
+
