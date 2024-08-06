@@ -1,0 +1,298 @@
+<h2 class="form-signin-heading"
+    ng-show="existingPolicyname">
+    <translate>Edit Policy {{ existingPolicyname }}</translate>
+    <span ng-show="checkRight('policywrite')">
+    <button class="btn btn-danger"
+            ng-click="disablePolicy(existingPolicyname)"
+            ng-show="params.active" translate>
+        Disable
+    </button>
+    <button class="btn btn-success"
+            ng-click="enablePolicy(existingPolicyname)"
+            ng-show="!params.active" translate>
+        Enable
+    </button>
+    <button class="btn btn-danger"
+        ng-click="delPolicy(existingPolicyname)">
+        <span class="glyphicon glyphicon-trash" translate>
+                        Delete
+        </span>
+    </button>
+    </span>
+</h2>
+
+<h2 class="form-signin-heading"
+        ng-hide="existingPolicyname" translate>Create a new Policy</h2>
+
+<form name="formPolicyAdd" role="form" validate
+      class="form-horizontal">
+
+    <div class="form-group">
+        <label for="policyname" class="col-sm-3 control-label" translate>
+            Policy Name</label>
+
+        <div class="col-sm-6">
+            <input name="policyname" id="policyname" class="form-control"
+                   ng-model="policyname" required placeholder="policy1"
+                   autofocus required/>
+            <p class="help-block"
+                ng-show="existingPolicyname" translate>
+                If you change the name of the policy, it will create a new policy
+                with the new name!
+            </p>
+        </div>
+        <div class="col-sm-3">
+        <button class="btn btn-primary"
+                ng-hide="existingPolicyname || viewPolicyTemplates"
+                ng-click="viewPolicyTemplates=true">
+                <span class="glyphicon glyphicon-leaf"></span>
+            <translate>Show Policy templates</translate>
+        </button>
+        <button class="btn btn-warning"
+                ng-hide="existingPolicyname || !viewPolicyTemplates"
+                ng-click="viewPolicyTemplates=false">
+                <span class="glyphicon glyphicon-leaf"></span>
+                <translate>Hide Policy templates</translate>
+        </button>
+        </div>
+    </div>
+    <div ng-show="viewPolicyTemplates"
+            class="form-group">
+        <label for="scope" class="col-sm-3 control-label" translate>
+            Policy Templates</label>
+        <div class="col-sm-9">
+            <table class="table table-hover">
+            <tr ng-repeat="(templateName, templateDesc) in policyTemplates">
+                <td>
+                    <a href=""
+                       ng-click="getTemplate(templateName)"
+                            >{{ templateName }}</a>
+                </td>
+                <td>
+                    <p class="help-block">{{ templateDesc }}</p>
+                </td>
+            </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center"
+         ng-show="checkRight('policywrite')">
+        <button ng-click="createPolicy()"
+                id="createPolicyButton"
+                ng-disabled="formPolicyAdd.$invalid"
+                class="btn btn-primary">
+            <div class="glyphicon glyphicon-plus" translate>
+                Create Policy
+            </div>
+        </button>
+    </div>
+
+    <div class="form-group">
+        <label for="scope" class="col-sm-3 control-label">
+            Scope</label>
+
+        <div class="col-sm-9">
+            <div isteven-multi-select
+                 id="selectScope"
+                 input-model="scopes"
+                 output-model="selectedScope"
+                 button-label="name"
+                 item-label="name"
+                 tick-property="ticked"
+                 selection-mode="single"
+                 on-item-click="fillActionList(selectedScope[0].name)"
+                    >
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group" ng-show="selectedScope[0].name=='admin'">
+        <label for="adminrealm" class="col-sm-3
+        control-label" translate>Admin-Realm</label>
+
+        <div class="col-sm-9">
+            <div isteven-multi-select
+                 input-model="adminRealms"
+                 output-model="selectedAdminRealms"
+                 button-label="icon name"
+                 item-label="icon name maker"
+                 tick-property="ticked"
+                    >
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="action" class="col-sm-3 control-label" translate>Action</label>
+
+        <div class="col-sm-9">
+            <div isteven-multi-select
+                 ng-hide="isActionValues"
+                 input-model="actions"
+                 output-model="selectedActions"
+                 button-label="name"
+                 item-label="icon name"
+                 tick-property="ticked"
+                 group-property="multiSelectGroup"
+                    >
+            </div>
+            <div ng-show="isActionValues">
+                <table class="table table-hover">
+                    <tr ng-repeat="action in actions">
+                        <td>
+                            <label for="cb_{{ action.name }}">
+                            <input type="checkbox" name="{{ action.name }}"
+                                   ng-model="actionCheckBox[action.name]"
+                                    id="cb_{{ action.name }}">
+                                {{ action.name }}
+                            </label>
+                        </td>
+
+                        <td class="policyaction">
+                            <select class="form-control"
+                                    ng-show="action.allowedValues && action.type=='str'"
+                                    ng-model="actionValuesStr[action.name]"
+                                    ng-disabled="!actionCheckBox[action.name]"
+                                    name="action.name"
+                                    ng-options="select for select in action
+                                    .allowedValues"
+                                    >
+                            </select>
+                            <select class="form-control"
+                                    ng-show="action.allowedValues && action.type=='int'"
+                                    ng-model="actionValuesNum[action.name]"
+                                    ng-disabled="!actionCheckBox[action.name]"
+                                    name="action.name"
+                                    ng-options="select for select in action
+                                    .allowedValues"
+                                    >
+                            </select>
+                            <select class="form-control"
+                                    ng-show="action.allowedValues && action.type=='text'"
+                                    ng-model="actionValuesText[action.name]"
+                                    ng-disabled="!actionCheckBox[action.name]"
+                                    name="action.name"
+                                    ng-options="select for select in action
+                                    .allowedValues"
+                                    >
+                            </select>
+                            <input type="text"
+                                   placeholder="text..."
+                                   ng-model="actionValuesStr[action.name]"
+                                   ng-show="action.type=='str' && !action.allowedValues"
+                                   ng-disabled="!actionCheckBox[action.name]"
+                                   ng-required="actionCheckBox[action.name] &&
+                                   action.type=='str'"
+                                   class="form-control"/>
+                            <input type="number"
+                                   ng-model="actionValuesNum[action.name]"
+                                   ng-show="action.type=='int' && !action.allowedValues"
+                                   ng-disabled="!actionCheckBox[action.name]"
+                                   ng-required="actionCheckBox[action.name] &&action
+                                   .type=='num'"
+                                   class="form-control"/>
+                            <textarea
+                                   ng-model="actionValuesText[action.name]"
+                                   ng-show="action.type=='text' && !action.allowedValues"
+                                   ng-disabled="!actionCheckBox[action.name]"
+                                   ng-required="actionCheckBox[action.name] &&action
+                                   .type=='text'"
+                                   class="form-control"></textarea>
+                        </td>
+                        <td>
+                            <!-- This is the description of the policy action
+                             -->
+                            <p class="help help-block">
+                                {{ action.desc }}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="realm" class="col-sm-3 control-label"
+                translate>User-Realm</label>
+
+        <div class="col-sm-9">
+            <div isteven-multi-select
+                 input-model="realms"
+                 output-model="selectedRealms"
+                 button-label="icon name"
+                 item-label="icon name maker"
+                 tick-property="ticked"
+                    >
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="resolver" class="col-sm-3
+        control-label" translate>User-Resolver</label>
+
+        <div class="col-sm-9">
+            <div isteven-multi-select
+                 input-model="resolvers"
+                 output-model="selectedResolvers"
+                 button-label="icon name"
+                 item-label="icon name maker"
+                 tick-property="ticked">
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="user" class="col-sm-3 control-label">
+            <span ng-show="selectedScope[0].name=='admin'"
+                    translate>Admin</span>
+            <span ng-hide="selectedScope[0].name=='admin'"
+                    translate>User</span>
+        </label>
+
+
+        <div class="col-sm-9">
+            <input name="user" class="form-control"
+                   type="text"
+                   ng-model="params.user"
+                   placeholder="admin, superuser"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="client" class="col-sm-3 control-label"
+               translate>Client</label>
+
+        <div class="col-sm-9">
+            <input name="client" class="form-control"
+                   type="text"
+                   ng-model="params.client"
+                   placeholder="10.0.0.0/8, !10.0.0.124"/>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="time" class="col-sm-3 control-label"
+               translate>Valid time</label>
+
+        <div class="col-sm-9">
+            <input name="time" class="form-control"
+                   type="text"
+                   ng-model="params.time"
+                   placeholder="Mon-Fri: 9-18, Sat: 10-15"/>
+        </div>
+    </div>
+
+
+    <div class="text-center"
+         ng-show="checkRight('policywrite')">
+        <button ng-click="createPolicy()"
+                id="createPolicyButton"
+                ng-disabled="formPolicyAdd.$invalid"
+                class="btn btn-primary">
+            <div class="glyphicon glyphicon-plus" translate>
+                Create Policy
+            </div>
+        </button>
+    </div>
+
+</form>
