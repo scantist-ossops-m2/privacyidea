@@ -1,0 +1,42 @@
+authorize {
+	preprocess
+	digest
+	suffix
+	ntdomain
+	files
+	expiration
+	logintime
+	pap
+}
+
+
+authenticate {
+	Auth-Type Perl {
+	perl
+	}
+	digest
+	unix
+}
+
+
+preacct {
+	suffix
+	files
+}
+
+accounting {
+}
+
+
+session {
+}
+
+
+post-auth {
+}
+
+pre-proxy {
+}
+
+post-proxy {
+}
