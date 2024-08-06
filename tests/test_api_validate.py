@@ -494,6 +494,40 @@ class AAValidateOfflineTestCase(MyTestCase):
             self.assertEqual(data.get("result").get("error").get("message"),
                              u"ERR905: Token is not an offline token or refill token is incorrect")
 
+    def test_01_check_invalid_input(self):
+        # Empty username
+        with self.app.test_request_context('/validate/check',
+                                           method='POST',
+                                           data={"user": " ",
+                                                 "pass": ""}):
+            res = self.app.full_dispatch_request()
+            self.assertTrue(res.status_code == 400, res)
+            result = json.loads(res.data).get("result")
+            error_msg = result.get("error").get("message")
+            self.assertEqual("ERR905: You need to specify a serial or a user.", error_msg)
+
+        # wrong username
+        with self.app.test_request_context('/validate/check',
+                                           method='POST',
+                                           data={"user": "h%h",
+                                                 "pass": ""}):
+            res = self.app.full_dispatch_request()
+            self.assertTrue(res.status_code == 400, res)
+            result = json.loads(res.data).get("result")
+            error_msg = result.get("error").get("message")
+            self.assertEqual("ERR905: Invalid user.", error_msg)
+
+        # wrong serial
+        with self.app.test_request_context('/validate/check',
+                                           method='POST',
+                                           data={"serial": "*",
+                                                 "pass": ""}):
+            res = self.app.full_dispatch_request()
+            self.assertTrue(res.status_code == 400, res)
+            result = json.loads(res.data).get("result")
+            error_msg = result.get("error").get("message")
+            self.assertEqual("ERR905: Invalid serial number.", error_msg)
+
 
 class ValidateAPITestCase(MyTestCase):
     """
